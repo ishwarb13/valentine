@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>💘 Valentine?</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #ffe6f0, #fff);
+      overflow: hidden;
+    }
+
+    .wrap {
+      width: min(560px, 92vw);
+      padding: 30px;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 18px 50px rgba(0,0,0,.15);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 36px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    .stage {
+      position: relative;
+      height: 230px;
+      border-radius: 18px;
+      border: 1px solid #ffb3d9;
+      background: #fff5fb;
+      overflow: hidden;
+    }
+
+    button {
+      position: absolute;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 8px 15px rgba(0,0,0,.2);
+    }
+
+    #yes {
+      left: 22%;
+      top: 60%;
+      background: #ff2d7a;
+      font-size: 16px;
+      padding: 12px 20px;
+    }
+
+    #no {
+      left: 55%;
+      top: 55%;
+      background: #111;
+      font-size: 20px;
+      padding: 18px 32px;
+    }
+
+    .tip {
+      margin-top: 18px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="confetti"></canvas>
+
+  <div class="wrap" id="card">
+    <h1>Will you be my Valentine, Kshipra? 💖</h1>
+    <p>Be honest… but choose wisely 😈</p>
+
+    <div class="stage" id="stage">
+      <button id="yes">Yes 💘</button>
+      <button id="no">No 🙃</button>
+    </div>
+
+    <div class="tip">Tip: try clicking “No” 😅</div>
+  </div>
+
+  <script>
+    const stage = document.getElementById("stage");
+    const noBtn = document.getElementById("no");
+    const yesBtn = document.getElementById("yes");
+
+    function moveNo() {
+      const s = stage.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+      const x = Math.random() * (s.width - b.width);
+      const y = Math.random() * (s.height - b.height);
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+    }
+
+    noBtn.addEventListener("mouseenter", moveNo);
+    noBtn.addEventListener("touchstart", e => {
+      e.preventDefault();
+      moveNo();
+    }, { passive: false });
+
+    yesBtn.addEventListener("click", () => {
+      document.getElementById("card").innerHTML = `
+        <h1>YAYYY!! 💕🥰</h1>
+        <p>I knew you’d say yes 😌</p>
+        <p>You’re officially my Valentine 💖</p>
+      `;
+      startConfetti();
+    });
+
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    let pieces = [];
+
+    function startConfetti() {
+      pieces = Array.from({ length: 120 }).map(() => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        r: 4 + Math.random() * 4,
+        d: Math.random() * 3 + 2
+      }));
+      requestAnimationFrame(draw);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        p.y += p.d;
+        ctx.fillStyle = `hsl(${Math.random() * 360},100%,60%)`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+  </script>
+</body>
+</html>
