@@ -19,22 +19,71 @@
     }
 
     .wrap {
-      width: min(560px, 92vw);
+      width: min(580px, 92vw);
       padding: 30px;
       border-radius: 24px;
       background: white;
       box-shadow: 0 18px 50px rgba(0,0,0,.15);
       text-align: center;
+      position: relative;
+    }
+
+    /* Photo + fade-in */
+    .photo {
+      width: 170px;
+      height: 170px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid #ff2d7a;
+      box-shadow: 0 10px 24px rgba(0,0,0,.18);
+      opacity: 0;
+      transform: translateY(6px);
+      animation: fadeIn 900ms ease-out forwards;
+    }
+
+    .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Heart pulse */
+    .heart {
+      display: inline-block;
+      font-size: 22px;
+      margin: 6px 0 2px;
+      animation: pulse 1.1s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.22); }
     }
 
     h1 {
-      margin-bottom: 10px;
-      font-size: 36px;
+      margin: 8px 0 6px;
+      font-size: 34px;
+      line-height: 1.15;
     }
 
     p {
-      margin-bottom: 20px;
+      margin: 0 0 14px;
       font-size: 16px;
+    }
+
+    /* Since line */
+    .since {
+      margin: 6px 0 18px;
+      font-size: 14px;
+      font-weight: 650;
+      color: #b10f56;
     }
 
     .stage {
@@ -53,8 +102,10 @@
       cursor: pointer;
       color: white;
       box-shadow: 0 8px 15px rgba(0,0,0,.2);
+      user-select: none;
     }
 
+    /* YES smaller */
     #yes {
       left: 22%;
       top: 60%;
@@ -63,6 +114,7 @@
       padding: 12px 20px;
     }
 
+    /* NO bigger */
     #no {
       left: 55%;
       top: 55%;
@@ -74,7 +126,7 @@
     .tip {
       margin-top: 18px;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     canvas {
@@ -89,8 +141,19 @@
   <canvas id="confetti"></canvas>
 
   <div class="wrap" id="card">
-    <h1>Will you be my Valentine, Kshipra? 💖</h1>
+
+    <!-- PHOTO (first) -->
+    <div class="photo" id="photoWrap">
+      <img id="photo" src="us.jpeg" alt="Us 💕">
+    </div>
+
+    <div class="heart">💖</div>
+
+    <h1>Will you be my Valentine, Kshipra?</h1>
     <p>Be honest… but choose wisely 😈</p>
+
+    <!-- Since line (edit date here) -->
+    <div class="since">Since <span id="sinceDate">14 Feb 2024</span> 💕</div>
 
     <div class="stage" id="stage">
       <button id="yes">Yes 💘</button>
@@ -101,6 +164,10 @@
   </div>
 
   <script>
+    // ✅ Edit your "Since" date here if needed
+    const SINCE_DATE = "14 Feb 2024";
+    document.getElementById("sinceDate").textContent = SINCE_DATE;
+
     const stage = document.getElementById("stage");
     const noBtn = document.getElementById("no");
     const yesBtn = document.getElementById("yes");
@@ -108,27 +175,39 @@
     function moveNo() {
       const s = stage.getBoundingClientRect();
       const b = noBtn.getBoundingClientRect();
+
       const x = Math.random() * (s.width - b.width);
       const y = Math.random() * (s.height - b.height);
+
       noBtn.style.left = x + "px";
       noBtn.style.top = y + "px";
     }
 
+    // Desktop: dodge cursor
     noBtn.addEventListener("mouseenter", moveNo);
+
+    // Mobile: dodge tap
     noBtn.addEventListener("touchstart", e => {
       e.preventDefault();
       moveNo();
     }, { passive: false });
 
+    // YES click: show different photo + confetti
     yesBtn.addEventListener("click", () => {
       document.getElementById("card").innerHTML = `
+        <div class="photo" style="animation: fadeIn 800ms ease-out forwards;">
+          <img src="us2.jpeg" alt="Us again 💕">
+        </div>
+        <div class="heart">💖</div>
         <h1>YAYYY!! 💕🥰</h1>
         <p>I knew you’d say yes 😌</p>
-        <p>You’re officially my Valentine 💖</p>
+        <div class="since">Since <strong>${SINCE_DATE}</strong> 💕</div>
+        <p style="margin-top:10px;">Now you owe me a date 🕯️🍓</p>
       `;
       startConfetti();
     });
 
+    // --- Minimal confetti
     const canvas = document.getElementById("confetti");
     const ctx = canvas.getContext("2d");
 
@@ -140,27 +219,41 @@
     resize();
 
     let pieces = [];
+    let raf = null;
+    let stopTimer = null;
 
     function startConfetti() {
-      pieces = Array.from({ length: 120 }).map(() => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - canvas.height,
-        r: 4 + Math.random() * 4,
-        d: Math.random() * 3 + 2
-      }));
-      requestAnimationFrame(draw);
-    }
+      if (raf) cancelAnimationFrame(raf);
+      if (stopTimer) clearTimeout(stopTimer);
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pieces.forEach(p => {
-        p.y += p.d;
-        ctx.fillStyle = `hsl(${Math.random() * 360},100%,60%)`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      requestAnimationFrame(draw);
+      pieces = Array.from({ length: 140 }).map(() => ({
+        x: Math.random() * canvas.width,
+        y: -Math.random() * canvas.height,
+        r: 3 + Math.random() * 5,
+        d: 2 + Math.random() * 4,
+        vx: -1 + Math.random() * 2
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.y += p.d;
+          p.x += p.vx;
+          ctx.fillStyle = `hsl(${Math.random() * 360},100%,60%)`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        raf = requestAnimationFrame(draw);
+      }
+
+      raf = requestAnimationFrame(draw);
+
+      stopTimer = setTimeout(() => {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }, 6000);
     }
   </script>
 </body>
